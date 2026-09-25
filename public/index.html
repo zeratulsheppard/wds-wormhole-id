@@ -16,6 +16,7 @@
     --accent-dim: #7a3e00;
     --good: #4ade80;
     --bad: #f87171;
+    --gold: #fbbf24;
     --amarr: #d4a017;
     --caldari: #3b82f6;
     --gallente: #22c55e;
@@ -32,17 +33,55 @@
   }
   .app { max-width: 900px; margin: 0 auto; padding: 24px 20px 60px; }
   header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
     margin-bottom: 20px;
     border-bottom: 1px solid var(--border);
     padding-bottom: 14px;
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
   }
   header h1 { margin: 0; font-size: 20px; font-weight: 500; letter-spacing: 0.5px; }
   header h1 span { color: var(--accent); }
   .score { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; }
   .score b { color: var(--text); font-weight: 500; }
+
+  .bp-bar {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .bp-tier {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 140px;
+  }
+  .bp-tier .tier-num { color: var(--gold); font-weight: 600; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+  .bp-tier .tier-title { color: var(--text); font-size: 13px; }
+  .bp-track {
+    flex: 1;
+    height: 8px;
+    background: #0a1218;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--gold) 100%);
+    width: 0%;
+    transition: width .4s ease;
+  }
+  .bp-xp { font-variant-numeric: tabular-nums; min-width: 80px; text-align: right; }
+
   .card { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 6px; padding: 24px; }
   h2 { margin: 0 0 8px; font-size: 18px; font-weight: 500; }
   p.lead { margin: 0 0 20px; color: var(--muted); font-size: 14px; line-height: 1.5; }
@@ -93,6 +132,68 @@
     pointer-events: none;
   }
 
+  .timer-bar {
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 4px;
+    background: rgba(255,255,255,0.05);
+  }
+  .timer-fill {
+    height: 100%;
+    background: var(--good);
+    width: 100%;
+    transition: width .1s linear, background .3s;
+  }
+
+  .quiz-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    background: #0a1218;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .pill b { color: var(--text); font-weight: 600; }
+  .pill.combo-hot { border-color: var(--accent); color: var(--accent); }
+  .pill.combo-hot b { color: var(--accent); }
+  .pill.combo-fire { border-color: var(--gold); color: var(--gold); animation: pulse 1.2s ease-in-out infinite; }
+  .pill.combo-fire b { color: var(--gold); }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,0);} 50%{box-shadow:0 0 0 6px rgba(251,191,36,0.15);} }
+
+  .dd-btn {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: background .1s, color .1s;
+  }
+  .dd-btn:hover:not(:disabled) { background: var(--gold); color: #000; }
+  .dd-btn.armed {
+    background: var(--gold);
+    color: #000;
+    box-shadow: 0 0 12px rgba(251,191,36,0.5);
+  }
+  .dd-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
   .choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
   .choice {
     background: #0f1720;
@@ -140,6 +241,16 @@
   .feedback.good { border-color: rgba(74, 222, 128, 0.4); }
   .feedback.bad  { border-color: rgba(248, 113, 113, 0.4); }
   .feedback .desc { color: var(--muted); margin-top: 4px; }
+  .breakdown {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .breakdown .xp-final { color: var(--gold); font-weight: 600; font-size: 13px; }
+  .breakdown .xp-loss { color: var(--bad); font-weight: 600; font-size: 13px; }
 
   .action-row { margin-top: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
   .btn {
@@ -156,9 +267,58 @@
   .btn:hover { border-color: var(--accent); color: var(--accent); }
   .btn.primary { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
   .btn.primary:hover { background: #ff9020; color: #000; }
+  .btn.ghost { border-color: transparent; color: var(--muted); font-size: 11px; }
+  .btn.ghost:hover { color: var(--bad); border-color: transparent; }
 
   .stage-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
   .hidden { display: none !important; }
+
+  .toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-40px);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%);
+    color: #000;
+    padding: 14px 24px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 8px 32px rgba(240, 124, 0, 0.4);
+    opacity: 0;
+    transition: opacity .3s, transform .3s;
+    z-index: 100;
+    pointer-events: none;
+    text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast small { display: block; font-weight: 500; font-size: 11px; text-transform: uppercase; opacity: 0.75; margin-bottom: 2px; }
+
+  .bp-panel {
+    margin-top: 20px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px;
+  }
+  .bp-panel h3 { margin: 0 0 12px; font-size: 14px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .tier-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
+  .tier-cell {
+    padding: 8px 10px;
+    background: #0a1218;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tier-cell.unlocked { border-color: var(--gold); background: rgba(251, 191, 36, 0.05); }
+  .tier-cell.current { border-color: var(--accent); background: rgba(240, 124, 0, 0.08); }
+  .tier-cell .n { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 22px; font-weight: 600; }
+  .tier-cell.unlocked .n { color: var(--gold); }
+  .tier-cell.current .n { color: var(--accent); }
 
   footer { margin-top: 24px; text-align: center; font-size: 11px; color: var(--muted); line-height: 1.6; }
   footer a { color: var(--muted); text-decoration: underline; }
@@ -168,13 +328,23 @@
 <div class="app">
 
   <header>
-    <h1>Wormhole <span>Identification</span> Trainer</h1>
-    <div class="score" id="scoreBar"></div>
+    <div class="header-top">
+      <h1>Wormhole <span>Identification</span> Trainer</h1>
+      <div class="score" id="scoreBar"></div>
+    </div>
+    <div class="bp-bar">
+      <div class="bp-tier">
+        <span class="tier-num" id="bpTierNum">Tier 1</span>
+        <span class="tier-title" id="bpTierTitle">Cadet Scanner</span>
+      </div>
+      <div class="bp-track"><div class="bp-fill" id="bpFill"></div></div>
+      <div class="bp-xp" id="bpXpLabel">0 / 500 XP</div>
+    </div>
   </header>
 
   <div class="card" id="menu">
     <h2>Pick a mode</h2>
-    <p class="lead">Identify wormholes by the visual on the connection preview. Each question pulls from a pool of stills and animations sourced from the <a href="https://wiki.eveuniversity.org/Visual_wormhole_identification" target="_blank" style="color:var(--accent)">EVE University wiki</a> and <a href="https://ashy.vargur.dev/wormhole-identification/" target="_blank" style="color:var(--accent)">Ashy's guide</a>.</p>
+    <p class="lead">Identify wormholes by the visual on the connection preview. Answer fast for a speed bonus, chain correct answers to build a combo multiplier, and risk a Double Down when you're feeling sharp. Every point of score is XP toward your battle pass tier.</p>
     <div class="mode-grid">
       <button class="mode-btn" data-mode="class">
         <h3>Class ID</h3>
@@ -192,13 +362,30 @@
   </div>
 
   <div class="card hidden" id="quiz">
+    <div class="quiz-meta">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="pill" id="comboPill"><span>Combo</span> <b id="comboVal">0</b> <span id="comboMult">×1.0</span></span>
+        <span class="pill"><span>Session</span> <b id="sessionXp">0</b> <span>XP</span></span>
+      </div>
+      <button class="dd-btn" id="ddBtn" title="Double Down: correct = 2× XP, wrong = -20 XP">All-or-Nothing</button>
+    </div>
     <div class="stage-label" id="stageLabel"></div>
-    <div class="image-frame" id="imageFrame"></div>
+    <div class="image-frame" id="imageFrame">
+      <div class="timer-bar hidden" id="timerBar"><div class="timer-fill" id="timerFill"></div></div>
+    </div>
     <div class="choices" id="choices"></div>
     <div class="feedback" id="feedback"></div>
     <div class="action-row">
       <button class="btn" id="quitBtn">&larr; Menu</button>
       <button class="btn primary hidden" id="nextBtn">Next &rarr;</button>
+    </div>
+  </div>
+
+  <div class="bp-panel" id="bpPanel">
+    <h3>Battle Pass Tiers</h3>
+    <div class="tier-grid" id="tierGrid"></div>
+    <div style="margin-top:12px;text-align:right">
+      <button class="btn ghost" id="resetBpBtn">Reset progress</button>
     </div>
   </div>
 
@@ -209,8 +396,9 @@
   </footer>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
-// Region gifs stay hotlinked (215MB of gifs = too much to self-host)
 const WIKI = "https://wiki.eveuniversity.org";
 
 const CLASSES = [
@@ -325,7 +513,54 @@ const REGIONS = [
   { empire: "minmatar", label: "Molden Heath", img: "/images/8/80/Wh_Minmatar_-_Molden_Heath.gif" },
 ];
 
-const state = { mode: null, correct: 0, total: 0, current: null, regionStage: null };
+const BP_TIERS = [
+  "Cadet Scanner", "Green Prober", "Chain Watcher", "Sig Hunter", "J-Space Initiate",
+  "Aurora Reader", "Empire Cartographer", "Nebula Scholar", "Class Diviner", "Deepwater Pilot",
+  "Thera Wayfarer", "Shattered Veteran", "Wormhole Marshal", "Nullifier Adept", "Chain Master",
+  "Rolling Sage", "Anoikis Warden", "Void Cartographer", "The Prophet", "WDS Legend",
+];
+const XP_PER_TIER = 500;
+const BASE_XP = 10;
+const DD_LOSS = 20;
+const TIMER_WINDOW_MS = 10000;
+
+const BP_STORAGE_KEY = "wh-id-bp-v1";
+
+const state = {
+  mode: null,
+  correct: 0,
+  total: 0,
+  current: null,
+  regionStage: null,
+  streak: 0,
+  bestStreak: 0,
+  sessionXp: 0,
+  doubleDown: false,
+  questionStart: 0,
+  timerRAF: null,
+  bp: loadBp(),
+};
+
+function loadBp() {
+  try {
+    const raw = localStorage.getItem(BP_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const xp = Math.max(0, Math.floor(Number(parsed.xp) || 0));
+      return { xp };
+    }
+  } catch (_) {}
+  return { xp: 0 };
+}
+function saveBp() {
+  try { localStorage.setItem(BP_STORAGE_KEY, JSON.stringify(state.bp)); } catch (_) {}
+}
+function tierFromXp(xp) {
+  const idx = Math.min(BP_TIERS.length - 1, Math.floor(xp / XP_PER_TIER));
+  return idx;
+}
+function xpIntoTier(xp) { return xp - tierFromXp(xp) * XP_PER_TIER; }
+
 const el = (id) => document.getElementById(id);
 
 function shuffle(arr) {
@@ -338,10 +573,33 @@ function shuffle(arr) {
 }
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+function comboMultiplier(streak) {
+  if (streak >= 20) return 3.0;
+  if (streak >= 10) return 2.0;
+  if (streak >= 5)  return 1.5;
+  if (streak >= 2)  return 1.25;
+  return 1.0;
+}
+function speedBonus(ms) {
+  if (ms < 2000)  return { xp: 15, label: "Instant" };
+  if (ms < 5000)  return { xp: 8,  label: "Quick" };
+  if (ms < 10000) return { xp: 3,  label: "Normal" };
+  return { xp: 0, label: "Slow" };
+}
+
 function renderVisual(pool) {
   const v = pick(pool);
   const frame = el("imageFrame");
   frame.innerHTML = "";
+  const timer = document.createElement("div");
+  timer.className = "timer-bar";
+  timer.id = "timerBar";
+  const fill = document.createElement("div");
+  fill.className = "timer-fill";
+  fill.id = "timerFill";
+  timer.appendChild(fill);
+  frame.appendChild(timer);
+
   let node;
   if (v.type === "video") {
     node = document.createElement("video");
@@ -365,6 +623,15 @@ function renderVisual(pool) {
 function renderSingleImg(src, sourceTag) {
   const frame = el("imageFrame");
   frame.innerHTML = "";
+  const timer = document.createElement("div");
+  timer.className = "timer-bar";
+  timer.id = "timerBar";
+  const fill = document.createElement("div");
+  fill.className = "timer-fill";
+  fill.id = "timerFill";
+  timer.appendChild(fill);
+  frame.appendChild(timer);
+
   const img = document.createElement("img");
   img.src = src;
   img.alt = "visual";
@@ -375,18 +642,112 @@ function renderSingleImg(src, sourceTag) {
   frame.appendChild(tag);
 }
 
+function startTimer() {
+  state.questionStart = performance.now();
+  if (state.timerRAF) cancelAnimationFrame(state.timerRAF);
+  const tick = () => {
+    const elapsed = performance.now() - state.questionStart;
+    const fill = document.getElementById("timerFill");
+    if (!fill) return;
+    const pct = Math.max(0, 1 - elapsed / TIMER_WINDOW_MS);
+    fill.style.width = (pct * 100) + "%";
+    if (elapsed < 2000)      fill.style.background = "var(--good)";
+    else if (elapsed < 5000) fill.style.background = "var(--gold)";
+    else if (elapsed < 10000) fill.style.background = "var(--accent)";
+    else                     fill.style.background = "var(--bad)";
+    if (elapsed < TIMER_WINDOW_MS + 200) state.timerRAF = requestAnimationFrame(tick);
+  };
+  state.timerRAF = requestAnimationFrame(tick);
+}
+function stopTimer() {
+  if (state.timerRAF) { cancelAnimationFrame(state.timerRAF); state.timerRAF = null; }
+}
+
 function updateScore() {
   const pct = state.total ? Math.round(100 * state.correct / state.total) : 0;
   el("scoreBar").innerHTML = state.total
-    ? `Score <b>${state.correct}</b> / <b>${state.total}</b> &nbsp; (${pct}%)`
+    ? `Score <b>${state.correct}</b> / <b>${state.total}</b> &nbsp; (${pct}%) &nbsp; · &nbsp; Best combo <b>${state.bestStreak}</b>`
     : "";
+}
+function updateComboPill() {
+  const p = el("comboPill");
+  const mult = comboMultiplier(state.streak);
+  el("comboVal").textContent = state.streak;
+  el("comboMult").textContent = "×" + mult.toFixed(2).replace(/\.?0+$/, "");
+  el("sessionXp").textContent = state.sessionXp;
+  p.classList.remove("combo-hot", "combo-fire");
+  if (state.streak >= 10) p.classList.add("combo-fire");
+  else if (state.streak >= 5) p.classList.add("combo-hot");
+}
+function updateBpBar() {
+  const tier = tierFromXp(state.bp.xp);
+  const into = xpIntoTier(state.bp.xp);
+  const isMax = tier >= BP_TIERS.length - 1;
+  el("bpTierNum").textContent = "Tier " + (tier + 1);
+  el("bpTierTitle").textContent = BP_TIERS[tier];
+  const pct = isMax ? 100 : (100 * into / XP_PER_TIER);
+  el("bpFill").style.width = pct + "%";
+  el("bpXpLabel").textContent = isMax
+    ? `${state.bp.xp} XP (MAX)`
+    : `${into} / ${XP_PER_TIER} XP`;
+}
+function renderTierGrid() {
+  const grid = el("tierGrid");
+  const currentTier = tierFromXp(state.bp.xp);
+  grid.innerHTML = "";
+  BP_TIERS.forEach((title, i) => {
+    const cell = document.createElement("div");
+    cell.className = "tier-cell";
+    if (i < currentTier) cell.classList.add("unlocked");
+    else if (i === currentTier) cell.classList.add("current");
+    cell.innerHTML = `<span class="n">${i + 1}</span><span>${title}</span>`;
+    grid.appendChild(cell);
+  });
+}
+
+function showToast(title, sub) {
+  const t = el("toast");
+  t.innerHTML = `<small>${sub || ""}</small>${title}`;
+  t.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+function addXp(delta) {
+  if (!delta) return;
+  const before = tierFromXp(state.bp.xp);
+  state.bp.xp = Math.max(0, state.bp.xp + delta);
+  const after = tierFromXp(state.bp.xp);
+  saveBp();
+  updateBpBar();
+  renderTierGrid();
+  if (after > before) {
+    showToast(BP_TIERS[after], `Tier ${after + 1} unlocked`);
+  }
+}
+
+function setDoubleDownUI() {
+  const b = el("ddBtn");
+  b.disabled = false;
+  if (state.doubleDown) {
+    b.classList.add("armed");
+    b.textContent = "DOUBLE DOWN ARMED";
+  } else {
+    b.classList.remove("armed");
+    b.textContent = "All-or-Nothing";
+  }
 }
 
 function showMenu() {
+  stopTimer();
   state.mode = null;
   state.correct = 0;
   state.total = 0;
   state.current = null;
+  state.streak = 0;
+  state.bestStreak = 0;
+  state.sessionXp = 0;
+  state.doubleDown = false;
   updateScore();
   el("menu").classList.remove("hidden");
   el("quiz").classList.add("hidden");
@@ -396,18 +757,27 @@ function startMode(mode) {
   state.mode = mode;
   state.correct = 0;
   state.total = 0;
+  state.streak = 0;
+  state.bestStreak = 0;
+  state.sessionXp = 0;
+  state.doubleDown = false;
   updateScore();
+  updateComboPill();
   el("menu").classList.add("hidden");
   el("quiz").classList.remove("hidden");
   nextQuestion();
 }
 function nextQuestion() {
+  stopTimer();
   el("feedback").className = "feedback";
   el("feedback").innerHTML = "";
   el("nextBtn").classList.add("hidden");
-  if (state.mode === "class")  return renderClassQ();
-  if (state.mode === "mass")   return renderMassQ();
-  if (state.mode === "region") return renderRegionQ();
+  state.doubleDown = false;
+  setDoubleDownUI();
+  if (state.mode === "class")  renderClassQ();
+  else if (state.mode === "mass")   renderMassQ();
+  else if (state.mode === "region") renderRegionQ();
+  startTimer();
 }
 
 function renderClassQ() {
@@ -465,6 +835,7 @@ function answerEmpire(guessId) {
   const a = state.current.answer;
   const empireCorrect = guessId === a.empire;
   state.current.empireGuess = guessId;
+  state.current.empireElapsedMs = performance.now() - state.questionStart;
 
   [...el("choices").children].forEach(btn => {
     btn.disabled = true;
@@ -500,11 +871,14 @@ function renderRegionStage2(empireCorrect) {
     b.onclick = () => answerRegion(r.label, empireCorrect);
     choicesEl.appendChild(b);
   });
+  // Reset timer for stage 2 (fresh timing window for the region pick)
+  startTimer();
 }
 function answerRegion(guessLabel, empireCorrect) {
   const a = state.current.answer;
   const regionCorrect = guessLabel === a.label;
   const fullyCorrect = empireCorrect && regionCorrect;
+  const elapsedMs = performance.now() - state.questionStart;
 
   [...el("choices").children].forEach(btn => {
     btn.disabled = true;
@@ -514,7 +888,7 @@ function answerRegion(guessLabel, empireCorrect) {
 
   let msg;
   if (fullyCorrect) {
-    msg = `Correct! <b>${a.label}</b> in ${EMPIRES[a.empire].label} space.`;
+    msg = `<b>${a.label}</b> in ${EMPIRES[a.empire].label} space.`;
   } else if (regionCorrect && !empireCorrect) {
     msg = `Region right (<b>${a.label}</b>) but empire wrong &mdash; no point.`;
   } else if (!regionCorrect && empireCorrect) {
@@ -522,12 +896,13 @@ function answerRegion(guessLabel, empireCorrect) {
   } else {
     msg = `Answer: <b>${a.label}</b> in ${EMPIRES[a.empire].label} space.`;
   }
-  scoreAndFeedback(fullyCorrect, msg);
+  scoreAndFeedback(fullyCorrect, msg, elapsedMs);
 }
 
 function answerSimple(list, guessId) {
   const a = state.current.answer;
   const correct = guessId === a.id;
+  const elapsedMs = performance.now() - state.questionStart;
   const correctLabel = list.find(x => x.id === a.id).label;
   const guessLabel   = list.find(x => x.id === guessId).label;
   [...el("choices").children].forEach(btn => {
@@ -535,16 +910,54 @@ function answerSimple(list, guessId) {
     if (btn.textContent === correctLabel) btn.classList.add("correct");
     else if (btn.textContent === guessLabel) btn.classList.add("wrong");
   });
-  scoreAndFeedback(correct, `<b>${a.label}</b> &mdash; <span class="desc">${a.desc}</span>`);
+  scoreAndFeedback(correct, `<b>${a.label}</b> &mdash; <span class="desc">${a.desc}</span>`, elapsedMs);
 }
 
-function scoreAndFeedback(correct, html) {
+function scoreAndFeedback(correct, html, elapsedMs) {
+  stopTimer();
   state.total += 1;
-  if (correct) state.correct += 1;
+  el("ddBtn").disabled = true;
+
+  let xpAwarded = 0;
+  let breakdown = "";
+
+  if (correct) {
+    state.correct += 1;
+    state.streak += 1;
+    if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+
+    const sb = speedBonus(elapsedMs);
+    const mult = comboMultiplier(state.streak);
+    const preMult = BASE_XP + sb.xp;
+    let xp = Math.round(preMult * mult);
+    const ddMult = state.doubleDown ? 2 : 1;
+    xp = xp * ddMult;
+    xpAwarded = xp;
+    state.sessionXp += xp;
+
+    const parts = [`base <b>+${BASE_XP}</b>`];
+    if (sb.xp > 0) parts.push(`${sb.label} <b>+${sb.xp}</b>`);
+    if (mult !== 1) parts.push(`combo <b>×${mult.toFixed(2).replace(/\.?0+$/, "")}</b>`);
+    if (state.doubleDown) parts.push(`double down <b>×2</b>`);
+    breakdown = `<div class="breakdown">${parts.join(" · ")} = <span class="xp-final">+${xp} XP</span> &nbsp; <span style="color:var(--muted)">(${(elapsedMs/1000).toFixed(1)}s)</span></div>`;
+  } else {
+    state.streak = 0;
+    if (state.doubleDown) {
+      xpAwarded = -DD_LOSS;
+      state.sessionXp = Math.max(0, state.sessionXp - DD_LOSS);
+      breakdown = `<div class="breakdown">double down forfeit <span class="xp-loss">-${DD_LOSS} XP</span> &nbsp; · combo reset</div>`;
+    } else {
+      breakdown = `<div class="breakdown">no XP &nbsp; · combo reset</div>`;
+    }
+  }
+
   updateScore();
+  updateComboPill();
+  addXp(xpAwarded);
+
   const fb = el("feedback");
   fb.className = "feedback " + (correct ? "good" : "bad") + " show";
-  fb.innerHTML = (correct ? "&#10003; Correct. " : "&#10007; Wrong. ") + html;
+  fb.innerHTML = (correct ? "&#10003; Correct. " : "&#10007; Wrong. ") + html + breakdown;
   el("nextBtn").classList.remove("hidden");
 }
 
@@ -553,6 +966,21 @@ document.querySelectorAll(".mode-btn").forEach(b => {
 });
 el("nextBtn").addEventListener("click", nextQuestion);
 el("quitBtn").addEventListener("click", showMenu);
+el("ddBtn").addEventListener("click", () => {
+  if (el("ddBtn").disabled) return;
+  state.doubleDown = !state.doubleDown;
+  setDoubleDownUI();
+});
+el("resetBpBtn").addEventListener("click", () => {
+  if (!confirm("Reset your battle pass progress? This clears saved XP and tier unlocks.")) return;
+  state.bp = { xp: 0 };
+  saveBp();
+  updateBpBar();
+  renderTierGrid();
+});
+
+updateBpBar();
+renderTierGrid();
 
 // Preload small assets (empire spheres + class/mass stills). Skip webm — too big.
 [
