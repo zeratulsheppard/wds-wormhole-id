@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wormhole Identification Trainer</title>
+<style>
+  :root {
+    --bg: #06090d;
+    --bg-elev: #0d141c;
+    --border: #1a2836;
+    --border-strong: #2a4258;
+    --text: #d8e2ea;
+    --muted: #7d8b98;
+    --accent: #f07c00;
+    --accent-dim: #7a3e00;
+    --good: #4ade80;
+    --bad: #f87171;
+    --amarr: #d4a017;
+    --caldari: #3b82f6;
+    --gallente: #22c55e;
+    --minmatar: #ef4444;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: radial-gradient(ellipse at top, #0a1520 0%, #06090d 60%) fixed;
+    color: var(--text);
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    min-height: 100vh;
+  }
+  .app {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 14px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  header h1 span { color: var(--accent); }
+  .score {
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .score b { color: var(--text); font-weight: 500; }
+
+  .card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 24px;
+  }
+
+  h2 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 500;
+  }
+  p.lead {
+    margin: 0 0 20px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .mode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .mode-btn {
+    background: #0f1720;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 18px 16px;
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color .15s, background .15s;
+    font-family: inherit;
+  }
+  .mode-btn:hover {
+    border-color: var(--accent);
+    background: #131e2a;
+  }
+  .mode-btn h3 {
+    margin: 0 0 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .mode-btn small {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.4;
+    display: block;
+  }
+
+  .image-frame {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    min-height: 260px;
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .image-frame img {
+    max-width: 100%;
+    max-height: 340px;
+    display: block;
+  }
+
+  .choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+  }
+  .choice {
+    background: #0f1720;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    padding: 12px 10px;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color .1s, background .1s;
+  }
+  .choice:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: #131e2a;
+  }
+  .choice:disabled { cursor: default; opacity: 0.85; }
+  .choice.correct {
+    border-color: var(--good);
+    background: rgba(74, 222, 128, 0.12);
+    color: var(--good);
+  }
+  .choice.wrong {
+    border-color: var(--bad);
+    background: rgba(248, 113, 113, 0.12);
+    color: var(--bad);
+  }
+  .choice.reveal-correct {
+    border-color: var(--good);
+    color: var(--good);
+  }
+
+  .choice[data-empire="amarr"]    { border-left: 3px solid var(--amarr); }
+  .choice[data-empire="caldari"]  { border-left: 3px solid var(--caldari); }
+  .choice[data-empire="gallente"] { border-left: 3px solid var(--gallente); }
+  .choice[data-empire="minmatar"] { border-left: 3px solid var(--minmatar); }
+
+  .feedback {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.5;
+    background: #0a1218;
+    border: 1px solid var(--border);
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.good { border-color: rgba(74, 222, 128, 0.4); }
+  .feedback.bad { border-color: rgba(248, 113, 113, 0.4); }
+  .feedback .desc { color: var(--muted); margin-top: 4px; }
+
+  .action-row {
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .btn {
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--text);
+    padding: 9px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    transition: border-color .1s, color .1s;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+    font-weight: 600;
+  }
+  .btn.primary:hover { background: #ff9020; color: #000; }
+
+  .stage-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .hidden { display: none !important; }
+
+  footer {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  footer a { color: var(--muted); text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <h1>Wormhole <span>Identification</span> Trainer</h1>
+    <div class="score" id="scoreBar"></div>
+  </header>
+
+  <!-- MENU -->
+  <div class="card" id="menu">
+    <h2>Pick a mode</h2>
+    <p class="lead">Identify wormholes by the visual on the connection preview. Based on the EVE University <a href="https://wiki.eveuniversity.org/Visual_wormhole_identification" target="_blank" style="color:var(--accent)">visual wormhole identification</a> guide.</p>
+    <div class="mode-grid">
+      <button class="mode-btn" data-mode="class">
+        <h3>Class ID</h3>
+        <small>Identify J-space class (C1&ndash;C6) or Thera from the connection nebula.</small>
+      </button>
+      <button class="mode-btn" data-mode="mass">
+        <h3>Mass Class</h3>
+        <small>Read the aurora flare colour to identify frigate / small / large / massive holes.</small>
+      </button>
+      <button class="mode-btn" data-mode="region">
+        <h3>Region ID <span style="color:var(--muted);font-weight:400">(advanced)</span></h3>
+        <small>Identify the destination region of an empire (K-space) wormhole. Two stages: empire, then region.</small>
+      </button>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="card hidden" id="quiz">
+    <div class="stage-label" id="stageLabel"></div>
+    <div class="image-frame"><img id="quizImg" alt="wormhole visual" /></div>
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="action-row">
+      <button class="btn" id="quitBtn">&larr; Menu</button>
+      <button class="btn primary hidden" id="nextBtn">Next &rarr;</button>
+    </div>
+  </div>
+
+  <footer>
+    Images &copy; CCP hf. / EVE University wiki &mdash; hotlinked from wiki.eveuniversity.org
+  </footer>
+</div>
+
+<script>
+const WIKI = "https://wiki.eveuniversity.org";
+
+const CLASSES = [
+  { id: "c1", label: "Class 1", img: "/images/d/d6/Connection_to_c1.jpg",
+    desc: "Grayish clouds with some black spots and blue/cyan details." },
+  { id: "c2", label: "Class 2", img: "/images/c/c5/Connection_to_c2.jpg",
+    desc: "Brownish hue with gray clouds and a distinct black spot in a light gray cloud." },
+  { id: "c3", label: "Class 3", img: "/images/f/f8/Connection_to_c3.jpg",
+    desc: "Grayish clouds with a distinct red cloud." },
+  { id: "c4", label: "Class 4", img: "/images/2/2c/Connection_to_c4.jpg",
+    desc: "Mainly dark red with one bright white cloud and distinct black spots." },
+  { id: "c5", label: "Class 5", img: "/images/a/a2/Connection_to_c5.jpg",
+    desc: "Dark red with some brown hues mixed in." },
+  { id: "c6", label: "Class 6", img: "/images/e/e4/Connection_to_c6.jpg",
+    desc: "Very chromatic orange with black details." },
+  { id: "thera", label: "Thera", img: "/images/c/c1/Connection_to_vidette.jpg",
+    desc: "Shattered / Thera-type connection (also used for frigate holes & Drifter systems visually)." },
+];
+
+const MASS = [
+  { id: "frigate", label: "Frigate only", img: "/images/3/3c/Wh_flare_frigate.jpg",
+    desc: "Royal blue aurora &mdash; only frigate-sized ships fit through." },
+  { id: "small",   label: "Small / Medium", img: "/images/9/95/Wh_flare_small.jpg",
+    desc: "Teal aurora &mdash; up to battlecruiser-class mass." },
+  { id: "large",   label: "Large", img: "/images/5/52/Wh_flare_large.jpg",
+    desc: "Gray aurora &mdash; up to battleship-class mass." },
+  { id: "massive", label: "Massive / Capital", img: "/images/f/f1/Wh_flare_massive.jpg",
+    desc: "Yellow aurora &mdash; capital-class mass allowed." },
+];
+
+const EMPIRES = {
+  amarr:    { label: "Amarr",    color: "#d4a017", hint: "Gold" },
+  caldari:  { label: "Caldari",  color: "#3b82f6", hint: "Blue" },
+  gallente: { label: "Gallente", color: "#22c55e", hint: "Green" },
+  minmatar: { label: "Minmatar", color: "#ef4444", hint: "Red" },
+};
+
+const REGIONS = [
+  // Amarr
+  { empire: "amarr", label: "Aridia",          img: "/images/e/eb/Wh_Amarr_-_Aridia.gif" },
+  { empire: "amarr", label: "Derelik",         img: "/images/0/0d/Wh_Amarr_-_Derelik.gif" },
+  { empire: "amarr", label: "Devoid",          img: "/images/0/09/Wh_Amarr_-_Devoid.gif" },
+  { empire: "amarr", label: "Domain",          img: "/images/7/76/Wh_Amarr_-_Domain.gif" },
+  { empire: "amarr", label: "Genesis",         img: "/images/2/21/Wh_Amarr_-_Genesis.gif" },
+  { empire: "amarr", label: "Kador",           img: "/images/2/25/Wh_Amarr_-_Kador.gif" },
+  { empire: "amarr", label: "Khanid",          img: "/images/c/c3/Wh_Amarr_-_Khanid.gif" },
+  { empire: "amarr", label: "Kor-Azor",        img: "/images/c/c9/Wh_Amarr_-_Kor-Azor.gif" },
+  { empire: "amarr", label: "Tash-Murkon",     img: "/images/a/a2/Wh_Amarr_-_Tash-Murkon.gif" },
+  { empire: "amarr", label: "The Bleak Lands", img: "/images/2/25/Wh_Amarr_-_The_Bleak_Lands.gif" },
+  // Caldari
+  { empire: "caldari", label: "Black Rise",   img: "/images/a/a7/Wh_Caldari_-_Black_Rise.gif" },
+  { empire: "caldari", label: "Lonetrek",     img: "/images/b/bb/Wh_Caldari_-_Lonetrek.gif" },
+  { empire: "caldari", label: "The Citadel",  img: "/images/7/7f/Wh_Caldari_-_The_Citadel.gif" },
+  { empire: "caldari", label: "The Forge",    img: "/images/7/78/Wh_Caldari_-_The_Forge.gif" },
+  // Gallente
+  { empire: "gallente", label: "Essence",      img: "/images/8/83/Wh_Gallente_-_Essence.gif" },
+  { empire: "gallente", label: "Everyshore",   img: "/images/0/07/Wh_Gallente_-_Everyshore.gif" },
+  { empire: "gallente", label: "Placid",       img: "/images/8/8e/Wh_Gallente_-_Placid.gif" },
+  { empire: "gallente", label: "Sinq Laison",  img: "/images/d/da/Wh_Gallente_-_Sinq_Laison.gif" },
+  { empire: "gallente", label: "Solitude",     img: "/images/1/13/Wh_Gallente_-_Solitude.gif" },
+  { empire: "gallente", label: "Verge Vendor", img: "/images/5/5c/Wh_Gallente_-_Verge_Vendor.gif" },
+  // Minmatar
+  { empire: "minmatar", label: "Heimatar",     img: "/images/2/21/Wh_Minmatar_-_Heimatar.gif" },
+  { empire: "minmatar", label: "Metropolis",   img: "/images/4/40/Wh_Minmatar_-_Metropolis.gif" },
+  { empire: "minmatar", label: "Molden Heath", img: "/images/8/80/Wh_Minmatar_-_Molden_Heath.gif" },
+];
+
+// ---------- state ----------
+const state = {
+  mode: null,
+  correct: 0,
+  total: 0,
+  current: null,
+  regionStage: null, // "empire" | "region"
+};
+
+const el = (id) => document.getElementById(id);
+
+// ---------- helpers ----------
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function updateScore() {
+  const pct = state.total ? Math.round(100 * state.correct / state.total) : 0;
+  el("scoreBar").innerHTML = state.total
+    ? `Score <b>${state.correct}</b> / <b>${state.total}</b> &nbsp; (${pct}%)`
+    : "";
+}
+
+// ---------- flow ----------
+function showMenu() {
+  state.mode = null;
+  state.correct = 0;
+  state.total = 0;
+  state.current = null;
+  updateScore();
+  el("menu").classList.remove("hidden");
+  el("quiz").classList.add("hidden");
+}
+
+function startMode(mode) {
+  state.mode = mode;
+  state.correct = 0;
+  state.total = 0;
+  updateScore();
+  el("menu").classList.add("hidden");
+  el("quiz").classList.remove("hidden");
+  nextQuestion();
+}
+
+function nextQuestion() {
+  el("feedback").className = "feedback";
+  el("feedback").innerHTML = "";
+  el("nextBtn").classList.add("hidden");
+
+  if (state.mode === "class") return renderClassQ();
+  if (state.mode === "mass")  return renderMassQ();
+  if (state.mode === "region") return renderRegionQ();
+}
+
+// -- class mode --
+function renderClassQ() {
+  const answer = pick(CLASSES);
+  state.current = { type: "class", answer };
+  el("stageLabel").textContent = "Which class is this wormhole?";
+  el("quizImg").src = WIKI + answer.img;
+  el("quizImg").alt = answer.label;
+
+  const choicesEl = el("choices");
+  choicesEl.innerHTML = "";
+  CLASSES.forEach(c => {
+    const b = document.createElement("button");
+    b.className = "choice";
+    b.textContent = c.label;
+    b.onclick = () => answerClass(c.id, b);
+    choicesEl.appendChild(b);
+  });
+}
+function answerClass(guessId, btn) {
+  const a = state.current.answer;
+  const correct = guessId === a.id;
+  lockChoices(a.id, guessId);
+  scoreAndFeedback(correct, `<b>${a.label}</b> &mdash; <span class="desc">${a.desc}</span>`);
+}
+
+// -- mass mode --
+function renderMassQ() {
+  const answer = pick(MASS);
+  state.current = { type: "mass", answer };
+  el("stageLabel").textContent = "Which mass class does this aurora indicate?";
+  el("quizImg").src = WIKI + answer.img;
+  el("quizImg").alt = answer.label;
+
+  const choicesEl = el("choices");
+  choicesEl.innerHTML = "";
+  MASS.forEach(c => {
+    const b = document.createElement("button");
+    b.className = "choice";
+    b.textContent = c.label;
+    b.onclick = () => answerMass(c.id, b);
+    choicesEl.appendChild(b);
+  });
+}
+function answerMass(guessId, btn) {
+  const a = state.current.answer;
+  const correct = guessId === a.id;
+  lockChoices(a.id, guessId);
+  scoreAndFeedback(correct, `<b>${a.label}</b> &mdash; <span class="desc">${a.desc}</span>`);
+}
+
+// -- region mode --
+function renderRegionQ() {
+  const answer = pick(REGIONS);
+  state.current = { type: "region", answer, empireGuess: null };
+  state.regionStage = "empire";
+  el("stageLabel").textContent = "Stage 1 of 2 — which empire?";
+  el("quizImg").src = WIKI + answer.img;
+  el("quizImg").alt = answer.label;
+
+  const choicesEl = el("choices");
+  choicesEl.innerHTML = "";
+  Object.entries(EMPIRES).forEach(([id, e]) => {
+    const b = document.createElement("button");
+    b.className = "choice";
+    b.dataset.empire = id;
+    b.innerHTML = `${e.label} <span style="color:var(--muted);font-size:11px">(${e.hint})</span>`;
+    b.onclick = () => answerEmpire(id);
+    choicesEl.appendChild(b);
+  });
+}
+function answerEmpire(guessId) {
+  const a = state.current.answer;
+  const empireCorrect = guessId === a.empire;
+  state.current.empireGuess = guessId;
+
+  // Show empire result inline but continue to stage 2
+  [...el("choices").children].forEach(btn => {
+    btn.disabled = true;
+    const eid = btn.dataset.empire;
+    if (eid === a.empire) btn.classList.add("correct");
+    else if (eid === guessId) btn.classList.add("wrong");
+  });
+
+  const fb = el("feedback");
+  fb.className = "feedback " + (empireCorrect ? "good" : "bad") + " show";
+  fb.innerHTML = empireCorrect
+    ? `Empire correct: <b>${EMPIRES[a.empire].label}</b>. Now pick the region.`
+    : `Empire was <b>${EMPIRES[a.empire].label}</b>, not ${EMPIRES[guessId].label}. Continue &mdash; pick the region.`;
+
+  setTimeout(() => renderRegionStage2(empireCorrect), 900);
+}
+function renderRegionStage2(empireCorrect) {
+  const a = state.current.answer;
+  state.regionStage = "region";
+  el("stageLabel").textContent = `Stage 2 of 2 — which ${EMPIRES[a.empire].label} region?`;
+  el("feedback").className = "feedback";
+  el("feedback").innerHTML = "";
+
+  const sameEmpire = REGIONS.filter(r => r.empire === a.empire);
+  const choicesEl = el("choices");
+  choicesEl.innerHTML = "";
+  shuffle(sameEmpire).forEach(r => {
+    const b = document.createElement("button");
+    b.className = "choice";
+    b.dataset.empire = a.empire;
+    b.textContent = r.label;
+    b.onclick = () => answerRegion(r.label, empireCorrect);
+    choicesEl.appendChild(b);
+  });
+}
+function answerRegion(guessLabel, empireCorrect) {
+  const a = state.current.answer;
+  const regionCorrect = guessLabel === a.label;
+  const fullyCorrect = empireCorrect && regionCorrect;
+
+  [...el("choices").children].forEach(btn => {
+    btn.disabled = true;
+    if (btn.textContent === a.label) btn.classList.add("correct");
+    else if (btn.textContent === guessLabel) btn.classList.add("wrong");
+  });
+
+  let msg;
+  if (fullyCorrect) {
+    msg = `Correct! <b>${a.label}</b> in ${EMPIRES[a.empire].label} space.`;
+  } else if (regionCorrect && !empireCorrect) {
+    msg = `Region right (<b>${a.label}</b>) but empire wrong &mdash; no point.`;
+  } else if (!regionCorrect && empireCorrect) {
+    msg = `Empire right, but region was <b>${a.label}</b>.`;
+  } else {
+    msg = `Answer: <b>${a.label}</b> in ${EMPIRES[a.empire].label} space.`;
+  }
+  scoreAndFeedback(fullyCorrect, msg);
+}
+
+// ---------- shared ----------
+function lockChoices(correctId, guessId) {
+  const list = state.mode === "class" ? CLASSES : MASS;
+  const correctLabel = list.find(x => x.id === correctId).label;
+  const guessLabel   = list.find(x => x.id === guessId).label;
+  [...el("choices").children].forEach(btn => {
+    btn.disabled = true;
+    if (btn.textContent === correctLabel) btn.classList.add("correct");
+    else if (btn.textContent === guessLabel) btn.classList.add("wrong");
+  });
+}
+
+function scoreAndFeedback(correct, html) {
+  state.total += 1;
+  if (correct) state.correct += 1;
+  updateScore();
+  const fb = el("feedback");
+  fb.className = "feedback " + (correct ? "good" : "bad") + " show";
+  fb.innerHTML = (correct ? "&#10003; Correct. " : "&#10007; Wrong. ") + html;
+  el("nextBtn").classList.remove("hidden");
+}
+
+// ---------- events ----------
+document.querySelectorAll(".mode-btn").forEach(b => {
+  b.addEventListener("click", () => startMode(b.dataset.mode));
+});
+el("nextBtn").addEventListener("click", nextQuestion);
+el("quitBtn").addEventListener("click", showMenu);
+
+// preload common images to avoid delay
+[...CLASSES, ...MASS, ...REGIONS].forEach(x => {
+  const i = new Image();
+  i.src = WIKI + x.img;
+});
+</script>
+</body>
+</html>
