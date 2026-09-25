@@ -184,10 +184,6 @@
         <h3>Mass Class</h3>
         <small>Read the aurora colour to identify frigate / small / large / massive holes.</small>
       </button>
-      <button class="mode-btn" data-mode="empire">
-        <h3>Empire ID</h3>
-        <small>Match the empire sphere colour to the empire (Amarr / Caldari / Gallente / Minmatar).</small>
-      </button>
       <button class="mode-btn" data-mode="region">
         <h3>Region ID <span style="color:var(--muted);font-weight:400">(advanced)</span></h3>
         <small>Identify the destination region of an empire K162. Two stages: empire, then region within that empire.</small>
@@ -411,7 +407,6 @@ function nextQuestion() {
   el("nextBtn").classList.add("hidden");
   if (state.mode === "class")  return renderClassQ();
   if (state.mode === "mass")   return renderMassQ();
-  if (state.mode === "empire") return renderEmpireQ();
   if (state.mode === "region") return renderRegionQ();
 }
 
@@ -445,37 +440,6 @@ function renderMassQ() {
     choicesEl.appendChild(b);
   });
 }
-function renderEmpireQ() {
-  const empireIds = Object.keys(EMPIRES);
-  const answerId = pick(empireIds);
-  const answer = EMPIRES[answerId];
-  state.current = { type: "empire", answerId };
-  el("stageLabel").textContent = "Which empire does this sphere represent?";
-  renderSingleImg(answer.sphere, "ashy");
-
-  const choicesEl = el("choices");
-  choicesEl.innerHTML = "";
-  shuffle(empireIds).forEach(id => {
-    const e = EMPIRES[id];
-    const b = document.createElement("button");
-    b.className = "choice";
-    b.dataset.empire = id;
-    b.innerHTML = `<span>${e.label} <span style="color:var(--muted);font-size:11px">(${e.hint})</span></span>`;
-    b.onclick = () => answerEmpireSimple(id);
-    choicesEl.appendChild(b);
-  });
-}
-function answerEmpireSimple(guessId) {
-  const answerId = state.current.answerId;
-  const correct = guessId === answerId;
-  [...el("choices").children].forEach(btn => {
-    btn.disabled = true;
-    if (btn.dataset.empire === answerId) btn.classList.add("correct");
-    else if (btn.dataset.empire === guessId) btn.classList.add("wrong");
-  });
-  scoreAndFeedback(correct, `<b>${EMPIRES[answerId].label}</b> &mdash; ${EMPIRES[answerId].hint} sphere.`);
-}
-
 function renderRegionQ() {
   const answer = pick(REGIONS);
   state.current = { type: "region", answer, empireGuess: null };
